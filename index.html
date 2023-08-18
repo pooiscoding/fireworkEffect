@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;" name="viewport" />
+
     <title>effect1</title>
     <style>
         *{
@@ -143,8 +144,21 @@
             for (let i = 0; i < 3; i++)
                 balls.push(new Ball());
         });
-
+        
         window.addEventListener("mouseout",()=>{
+            mouse.x = undefined;
+            mouse.y = undefined;
+        });
+
+        window.addEventListener("touchmove", (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+            // 多弄一些球，讓煙火燦爛(?一點
+            for (let i = 0; i < 3; i++)
+                balls.push(new Ball());
+        });
+
+        window.addEventListener("touchend", () => {
             mouse.x = undefined;
             mouse.y = undefined;
         });
