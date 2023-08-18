@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>effect1</title>
+    <style>
+        *{
+            margin: 0; padding: 0;
+        }
+        body{
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #canvas{
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            left: 0; top: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+        let w = canvas.width = window.innerWidth;
+        let h = canvas.height = window.innerHeight;
+
+        // 重新抓取視窗大小 用以解決視窗縮放後 canvas 大小錯誤的問題
+        function resize(){
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        // 目前滑鼠位置
+        let mouse = {
+            x : undefined,
+            y : undefined
+        };
+        
+        let balls = []; // 存放所有單顆煙火小球的陣列
+
+        // 顏色表
+        const COLORTABLE = [
+            "rgb(255, 102, 102)",
+            "rgb(255, 178, 102)",
+            "rgb(255, 255, 102)",
+            "rgb(102, 255, 102)",
+            "rgb(102, 255, 255)",
+            "rgb(102, 102, 255)",
+            "rgb(178, 102, 255)"
+        ];
+
+        // 渲染煙火小球到畫布的函式
+        function draw_balls(){
+            let temp = []; // temp用以存放得以繼續存在的煙火小球，在渲染結束後交給 balls，用以清除生命週期已盡的小球
+            for (let i = 0; i < balls.length; i++){
+                balls[i].draw();
+                balls[i].upd();
+                
+                if (balls[i].time <= balls[i].end){
+                    temp.push(balls[i]);
+                }
+            }
+            balls = temp;
+        }
+                
+        function animation(){
+
+            resize();
+            ctx.clearRect(0, 0, w, h);
+            ctx.globalCompositeOperation = "lighter"; //高光效果(?
+            draw_balls();
+            // 回呼動畫 達成無限動畫的效果
+            window.requestAnimationFrame(animation);
+        }
+
+        function init(){
+            ctx.clearRect(0, 0, w, h);
+            window.requestAnimationFrame(animation);
+        }
+        // 取得在 上界 和 下界 間的一隨機整數
+        function get_random_int(upperBound, lowerBound){
+            return Math.round(Math.random()* (upperBound-lowerBound)) + lowerBound;
+        }
+        // easeout效果計算函式 傳入原本進度 回傳界於 0 ~ 1 的比例 
+        /* function easeOutQuart(x){
+            return 1 - Math.pow(1-x, 4);
+        } */
+        function easeOutExpo(x){
+            return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+        }
+
+        class Ball{
+            constructor(){
+                // x, y 為座標, size 為半徑
+                this.startState = { // 起始狀態
+                    x : mouse.x + get_random_int(25, -25),
+                    y : mouse.y + get_random_int(25, -25),
+                    size : get_random_int(35, 25)
+                }
+                this.endState = { // 目標狀態
+                    x : mouse.x + get_random_int(200, -200),
+                    y : mouse.y + get_random_int(200, -200),
+                }
+                this.x = this.startState.x; // 目前 x 座標
+                this.y = this.startState.y; // 目前 y 座標
+                this.color = COLORTABLE[get_random_int(COLORTABLE.length-1, 0)]; // 顏色
+                this.size = this.startState.size; // 目前大小
+                this.end = 40; // 壽命盡頭 
+                this.time = 0; // 目前壽命
+            }
+            draw(){
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+            upd(){
+                if (this.time <= this.end){
+                    let progress = ((this.end - this.time) / this.end); // 生命進度
+                    // 達到漸小效果
+                    this.size = this.startState.size * (easeOutExpo(progress)); // 大小漸小
+                    // 達到散開效果
+                    this.x = this.x + (this.endState.x - this.x) * 0.1; // 往左右目標位置移動
+                    this.y = this.y + (this.endState.y - this.y) * 0.1; // 往上下目標位置移動
+                }
+                this.time ++;
+            }
+        }
+
+        
+        window.addEventListener("DOMContentLoaded", init);
+
+        window.addEventListener("mousemove", (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+            // 多弄一些球，讓煙火燦爛(?一點
+            for (let i = 0; i < 3; i++)
+                balls.push(new Ball());
+        });
+
+        window.addEventListener("mouseout",()=>{
+            mouse.x = undefined;
+            mouse.y = undefined;
+        });
+
+
+    </script>
+</body>
+</html>
